@@ -5,9 +5,9 @@ plugins {
     id "io.gatling.gradle" version "3.6.0"
 }
 
-group = 'io.github.jass2125'
+group = 'io.github.jair.anderson.souza'
 version = '1.0.0'
-sourceCompatibility = '14'
+sourceCompatibility = '15'
 
 repositories {
     mavenCentral()

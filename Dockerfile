@@ -1,5 +1,4 @@
-FROM adoptopenjdk/openjdk14:x86_64-tumbleweed-jre-14.0.2_12
-
+FROM adoptopenjdk/openjdk15:ppc64le-ubuntu-jre15u-nightly
 WORKDIR /app
 
 COPY ./build/libs/cap-availability-1.0.0.jar app.jar
