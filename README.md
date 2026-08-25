@@ -31,15 +31,48 @@
 ![Reports](https://github.com/jass2125/gatling-application/blob/master/img/graphics.png)
 
 
-Create cluster
-docker build -t gatling-app:v1 .
+# Kubernetes
+#### 1. Build image
+`docker build -t cap-availability-app:v1 .`
 
-kubectl apply -f deployment.yaml
-kind-windows-amd64.exe load docker-image gatling-app:v1 --name fullcycle
-kind-windows-amd64.exe load docker-image gatling-app:v2 --name fullcycle
-docker exec -it fullcycle-control-plane crictl images
-kind-windows-amd64.exe load docker-image gatling-app:v1 --name fullcycle
-kind-windows-amd64.exe create cluster --name fullcycle
+#### 2.Upload image
+`kind load docker-image cap-availability-app:v1 --name cap-availability`
+
+#### 3. Create cluster
+`kind create cluster --name cap-availability`
+
+#### 4. Create image
+`docker build -t cap-availability-app:v1 .`
+
+## Set Context
+`kubectl cluster-info --context kind-cap-availability`
+
+## Apply
+`kubectl apply -f service.yaml`
+
+## List all pods
+`kubectl get pods`
+
+## List all deployments
+`kubectl get deploy`
+
+## List all svc
+`kubectl get svc`
+
+## List all replicasets
+`kubectl get rs`
+
+## Create replicaset by a file
+`kubectl apply -f rs.yaml`
+
+## Port Forward
+`kubectl port-forward pod/nginx 8000:80`
+
+## Delete pods
+`kubectl delete pod nginx`
+
+## List images in control pane
+`docker exec -it fullcycle-control-plane crictl images`
 
 
 

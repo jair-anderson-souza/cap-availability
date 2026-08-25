@@ -4,10 +4,9 @@
 ./.gradle
 # Log file
 *.log
-
+./build
 # BlueJ files
 *.ctxt
-
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
 
