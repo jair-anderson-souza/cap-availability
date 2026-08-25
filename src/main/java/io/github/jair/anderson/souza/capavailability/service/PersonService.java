@@ -1,7 +1,7 @@
-package io.github.jass2125.gatling.service;
+package io.github.jair.anderson.souza.capavailability.service;
 
-import io.github.jass2125.gatling.model.Person;
-import io.github.jass2125.gatling.repository.PersonRepository;
+import io.github.jair.anderson.souza.capavailability.model.Person;
+import io.github.jair.anderson.souza.capavailability.repository.PersonRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;

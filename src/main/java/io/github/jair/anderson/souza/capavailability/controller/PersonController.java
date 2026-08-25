@@ -1,9 +1,9 @@
-package io.github.jass2125.gatling.controller;
+package io.github.jair.anderson.souza.capavailability.controller;
 
-import io.github.jass2125.gatling.dto.PersonRequest;
-import io.github.jass2125.gatling.mapper.PersonMapper;
-import io.github.jass2125.gatling.model.Person;
-import io.github.jass2125.gatling.service.PersonService;
+import io.github.jair.anderson.souza.capavailability.dto.PersonRequest;
+import io.github.jair.anderson.souza.capavailability.mapper.PersonMapper;
+import io.github.jair.anderson.souza.capavailability.model.Person;
+import io.github.jair.anderson.souza.capavailability.service.PersonService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;

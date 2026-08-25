@@ -1,4 +1,4 @@
-package io.github.jass2125.gatling.dto;
+package io.github.jair.anderson.souza.capavailability.dto;
 
 
 public class PersonRequest {

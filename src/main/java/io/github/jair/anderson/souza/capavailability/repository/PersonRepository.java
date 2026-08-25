@@ -1,6 +1,6 @@
-package io.github.jass2125.gatling.repository;
+package io.github.jair.anderson.souza.capavailability.repository;
 
-import io.github.jass2125.gatling.model.Person;
+import io.github.jair.anderson.souza.capavailability.model.Person;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

@@ -1,4 +1,4 @@
-package io.github.jass2125.gatling.model;
+package io.github.jair.anderson.souza.capavailability.model;
 
 
 import javax.persistence.Entity;
