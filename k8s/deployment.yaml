@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gatling-app
+
+spec:
+  replicas: 5
+  selector:
+    matchLabels:
+      app: gatling
+  template:
+    metadata:
+      labels:
+        app: gatling
+    spec:
+      containers:
+        - name: gatling-app
+          image: gatling-app:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
