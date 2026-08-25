@@ -1,0 +1,38 @@
+services:
+  api:
+    platform: linux/x86_64
+    build: .
+    ports:
+      - "8080:8080"
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: '2048MB'
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    platform: linux/x86_64
+    image: postgres:13
+    hostname: db
+    environment:
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_USER=root
+      - POSTGRES_DB=gatling_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./src/main/resources:/docker-entrypoint-initdb.d/
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U root -d gatling_db" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: '2024MB'
+
