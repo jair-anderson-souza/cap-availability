@@ -36,17 +36,12 @@
 `docker build -t cap-availability-app:v1 .`
 
 #### 2. Create cluster
-`kind create cluster --name cap-availability`
-minikube start --profile cap-availability
+`minikube start --profile cap-availability`
 
-#### 3. Create image
-`docker build -t cap-availability-app:v1 .`
+#### 3.Upload image
+`minikube image load cap-availability-app:v1 --profile cap-availability`
 
-#### 4.Upload image
-`kind load docker-image cap-availability-app:v1 --name cap-availability`
-minikube image load cap-availability-app:v1 --profile cap-availability
-
-minikube tunnel
+minikube tunnel --profile cap-availability`
 
 ## Set Context
 `kubectl cluster-info --context kind-cap-availability`
@@ -86,3 +81,7 @@ kubectl delete replicaset,service,deployment,pod --all
 
 
 http://127.0.0.1:8080/person/1
+
+
+
+psql -d capavailability_db
