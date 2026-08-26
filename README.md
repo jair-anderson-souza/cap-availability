@@ -79,6 +79,7 @@ kubectl cluster-info --context cap-availability
 kubectl delete replicaset,service,deployment,pod --all
 
 
+minikube addons enable metrics-server --profile cap-availability
 
 http://localhost:8080/person/1
 

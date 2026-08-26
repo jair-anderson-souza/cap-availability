@@ -13,7 +13,6 @@ services:
       db:
         condition: service_healthy
 
-#  TODO //Essa imagem deveria ser criada em outra k8s config
   db:
     platform: linux/x86_64
     image: postgres:13
