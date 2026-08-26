@@ -35,17 +35,22 @@
 #### 1. Build image
 `docker build -t cap-availability-app:v1 .`
 
-#### 2.Upload image
-`kind load docker-image cap-availability-app:v1 --name cap-availability`
-
-#### 3. Create cluster
+#### 2. Create cluster
 `kind create cluster --name cap-availability`
+minikube start --profile cap-availability
 
-#### 4. Create image
+#### 3. Create image
 `docker build -t cap-availability-app:v1 .`
+
+#### 4.Upload image
+`kind load docker-image cap-availability-app:v1 --name cap-availability`
+minikube image load cap-availability-app:v1 --profile cap-availability
+
+minikube tunnel
 
 ## Set Context
 `kubectl cluster-info --context kind-cap-availability`
+kubectl cluster-info --context cap-availability
 
 ## Apply
 `kubectl apply -f service.yaml`
@@ -72,7 +77,8 @@
 `kubectl delete pod nginx`
 
 ## List images in control pane
-`docker exec -it fullcycle-control-plane crictl images`
+`docker exec -it cap-availability-control-plane crictl images`
 
 
 
+kubectl delete replicaset,service,deployment,pod --all

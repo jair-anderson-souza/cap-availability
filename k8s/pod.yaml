@@ -1,12 +1,13 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: nginx
+  name: cap-availability
   labels:
-    app.kubernetes.io/name: nginx
+    app: cap-availability
+
 spec:
   containers:
-  - name: nginx
-    image: nginx:latest
+  - name: cap-availability
+    image: cap-availability-app:v1
     ports:
-      - containerPort: 80
+      - containerPort: 8080

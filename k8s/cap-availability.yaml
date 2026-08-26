@@ -1,0 +1,111 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cap-availability
+
+spec:
+  replicas: 2
+
+  selector:
+    matchLabels:
+      app: cap-availability
+
+  template:
+    metadata:
+      labels:
+        app: cap-availability
+    spec:
+      containers:
+        - name: cap-availability
+          image: cap-availability-app:v1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: cap-availability
+  labels:
+    name: cap-availability
+
+spec:
+  type: LoadBalancer
+
+  selector:
+    app: cap-availability
+  ports:
+    - port: 8080
+      targetPort: 8080
+
+#---
+
+#apiVersion: networking.k8s.io/v1
+#kind: Ingress
+#metadata:
+#  name: cap-availability
+#
+#spec:
+#  rules:
+#    - host: cap-availability.local
+#
+#      http:
+#        paths:
+#          - path: /
+#            pathType: Prefix
+#
+#            backend:
+#              service:
+#                name: cap-availability
+#                port:
+#                  number: 8080
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db
+spec:
+  replicas: 2
+
+  selector:
+    matchLabels:
+      app: db
+
+  template:
+    metadata:
+      labels:
+        app: db
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:13
+
+          ports:
+            - containerPort: 5432
+
+          env:
+            - name: POSTGRES_PASSWORD
+              value: root
+            - name: POSTGRES_USER
+              value: root
+            - name: POSTGRES_DB
+              value: capavailability_db
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: db
+spec:
+  type: ClusterIP
+  selector:
+    app: db
+
+  ports:
+    - port: 5432
+      targetPort: 5432

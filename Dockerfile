@@ -1,4 +1,5 @@
-FROM adoptopenjdk/openjdk15:ppc64le-ubuntu-jre15u-nightly
+FROM openjdk:15.0.2-jdk-slim
+
 WORKDIR /app
 
 COPY ./build/libs/cap-availability-1.0.0.jar app.jar
