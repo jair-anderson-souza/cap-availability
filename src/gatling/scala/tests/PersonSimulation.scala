@@ -51,7 +51,7 @@ class PersonSimulation extends Simulation {
       ).pause(1.seconds)
   }
 
-  val httpProtocol = http.baseUrl("http://localhost:8181").header("Content-Type", "application/json")
+  val httpProtocol = http.baseUrl("http://localhost:8080").header("Content-Type", "application/json")
 
   val admins = scenario("admins").exec(Search.scenarioFindAll, SearchById.scenarioFindById, Update.scenarioUpdate, Create.scenarioCreate)
   val users = scenario("users").exec(Search.scenarioFindAll, SearchById.scenarioFindById)

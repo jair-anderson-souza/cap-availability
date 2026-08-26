@@ -80,8 +80,8 @@ kubectl delete replicaset,service,deployment,pod --all
 
 
 
-http://127.0.0.1:8080/person/1
+http://localhost:8080/person/1
 
-
+kubectl exec -it db-59b9bc6688-lpkch -- /bin/bash
 
 psql -d capavailability_db
