@@ -1,4 +1,4 @@
-package io.github.jair.anderson.souza.capavailability.model;
+package io.github.jair.anderson.souza.cap.model;
 
 
 import javax.persistence.Entity;

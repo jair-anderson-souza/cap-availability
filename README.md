@@ -33,56 +33,52 @@
 
 # Kubernetes
 #### 1. Build image
-`docker build -t cap-availability-app:v1 .`
+`docker build -t cap-app:v1 .`
 
 #### 2. Create cluster
-`minikube start --profile cap-availability`
+`minikube start --profile cap-app`
 
 #### 3.Upload image
-`minikube image load cap-availability-app:v1 --profile cap-availability`
+`minikube image load cap-app:v1 --profile cap-app`
 
-minikube tunnel --profile cap-availability`
+## 4. Set Context
+`kubectl cluster-info --context kind-cap-app`
+kubectl cluster-info --context cap-app
 
-## Set Context
-`kubectl cluster-info --context kind-cap-availability`
-kubectl cluster-info --context cap-availability
+## 5. Apply
+`kubectl apply -f cap.yaml`
 
-## Apply
-`kubectl apply -f service.yaml`
-
-## List all pods
+## 6. List all pods
 `kubectl get pods`
 
-## List all deployments
+## 6. List all hpa
+`kubectl get pods -w`
+
+## 7. List all deployments
 `kubectl get deploy`
 
-## List all svc
+## 8. List all svc
 `kubectl get svc`
 
-## List all replicasets
+## 9. List all replicasets
 `kubectl get rs`
 
-## Create replicaset by a file
+## 10. Create replicaset by a file
 `kubectl apply -f rs.yaml`
 
-## Port Forward
+## 11. Port Forward
 `kubectl port-forward pod/nginx 8000:80`
 
-## Delete pods
+## 12. Delete pods
 `kubectl delete pod nginx`
 
-## List images in control pane
-`docker exec -it cap-availability-control-plane crictl images`
-
+## 13. List images in control pane
+`docker exec -it cap-app-control-plane crictl images`
 
 
 kubectl delete replicaset,service,deployment,pod --all
-
-
-minikube addons enable metrics-server --profile cap-availability
-
+minikube addons enable metrics-server --profile cap-app
 http://localhost:8080/person/1
-
 kubectl exec -it db-59b9bc6688-lpkch -- /bin/bash
-
-psql -d capavailability_db
+psql -d cap_db
+minikube tunnel --profile cap-app`

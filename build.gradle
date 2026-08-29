@@ -31,7 +31,7 @@ test {
 }
 
 bootJar {
-    archiveFileName = 'cap-availability-1.0.0.jar'
+    archiveFileName = 'cap-api-1.0.0.jar'
 }
 
 gatling {

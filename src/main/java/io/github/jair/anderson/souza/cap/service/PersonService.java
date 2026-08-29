@@ -1,7 +1,7 @@
-package io.github.jair.anderson.souza.capavailability.service;
+package io.github.jair.anderson.souza.cap.service;
 
-import io.github.jair.anderson.souza.capavailability.model.Person;
-import io.github.jair.anderson.souza.capavailability.repository.PersonRepository;
+import io.github.jair.anderson.souza.cap.model.Person;
+import io.github.jair.anderson.souza.cap.repository.PersonRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;

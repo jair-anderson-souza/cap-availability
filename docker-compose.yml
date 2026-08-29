@@ -20,13 +20,13 @@ services:
     environment:
       - POSTGRES_PASSWORD=root
       - POSTGRES_USER=root
-      - POSTGRES_DB=capavailability_db
+      - POSTGRES_DB=cap_db
     ports:
       - "5432:5432"
     volumes:
       - ./src/main/resources:/docker-entrypoint-initdb.d/
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U root -d capavailability_db" ]
+      test: [ "CMD-SHELL", "pg_isready -U root -d cap_db" ]
       interval: 5s
       timeout: 5s
       retries: 5

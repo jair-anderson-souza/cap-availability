@@ -1,9 +1,9 @@
-package io.github.jair.anderson.souza.capavailability.controller;
+package io.github.jair.anderson.souza.cap.controller;
 
-import io.github.jair.anderson.souza.capavailability.dto.PersonRequest;
-import io.github.jair.anderson.souza.capavailability.mapper.PersonMapper;
-import io.github.jair.anderson.souza.capavailability.model.Person;
-import io.github.jair.anderson.souza.capavailability.service.PersonService;
+import io.github.jair.anderson.souza.cap.dto.PersonRequest;
+import io.github.jair.anderson.souza.cap.mapper.PersonMapper;
+import io.github.jair.anderson.souza.cap.model.Person;
+import io.github.jair.anderson.souza.cap.service.PersonService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;

@@ -4,65 +4,180 @@ import io.gatling.core.Predef._
 import io.gatling.http.Predef._
 
 import scala.concurrent.duration._
-import scala.language.postfixOps
 
 class PersonSimulation extends Simulation {
 
-  object Update {
+  // =========================
+  // FEEDERS
+  // =========================
 
-    val file = csv("persons.csv").random
-    val scenarioUpdate = scenario("Update")
-      .feed(file)
+  val persons =
+    csv("persons.csv").random
+
+  val ids =
+    csv("ids.csv").random
+
+  val createPersons =
+    csv("create-persons.csv").random
+
+  val pagination =
+    csv("pagination.csv").random
+
+
+  // =========================
+  // HTTP
+  // =========================
+
+  val httpProtocol =
+    http
+      .baseUrl("http://localhost:8080")
+      .acceptHeader("application/json")
+      .contentTypeHeader("application/json")
+
+
+  // =========================
+  // LIST
+  // =========================
+
+  val listPersons =
+    exec(
+      feed(pagination)
+    )
       .exec(
-        http("update").put("/person").body(StringBody(""" { "id": "${id}", "name" : "${name}" } """))
-      ).pause(1.seconds)
+        http("LIST - /person")
+          .get("/person?page=${page}&size=${size}")
+          .check(status.is(200))
+      )
 
-  }
 
-  object Create {
+  // =========================
+  // FIND
+  // =========================
 
-    val file = csv("create-persons.csv").random
-    val scenarioCreate = scenario("Create_New_Person")
-      .feed(file)
+  val findPerson =
+    exec(
+      feed(ids)
+    )
       .exec(
-        http("create").post("/person").body(StringBody((""" { "name": "${name}" } """)))
-      ).pause(1.seconds)
+        http("FIND - /person/{id}")
+          .get("/person/${id}")
+          .check(status.is(200))
+      )
 
-  }
 
-  object SearchById {
+  // =========================
+  // UPDATE
+  // =========================
 
-    var file = csv("ids.csv").random
-    val scenarioFindById = scenario("Load_Find_By_ID")
-      .feed(file)
+  val updatePerson =
+    exec(
+      feed(persons)
+    )
       .exec(
-        http("find_by_id").get("/person/${id}")
-      ).pause(1.seconds)
-  }
+        http("UPDATE - /person")
+          .put("/person")
+          .body(
+            StringBody(
+              """{"id":"${id}","name":"${name}"}"""
+            )
+          )
+          .check(status.is(200))
+      )
 
-  object Search {
 
-    var pagination = csv("pagination.csv").random
+  // =========================
+  // CREATE
+  // =========================
 
-    val scenarioFindAll = scenario("Load_Find_All")
-      .feed(pagination)
+  val createPerson =
+    exec(
+      feed(createPersons)
+    )
       .exec(
-        http("list_persons").get("/person?page=${page}&size=${size}").check(status.in(200, 201, 202, 203, 204))
-      ).pause(1.seconds)
-  }
+        http("CREATE - /person")
+          .post("/person")
+          .body(
+            StringBody(
+              """{"name":"${name}"}"""
+            )
+          )
+          .check(status.in(200, 201))
+      )
 
-  val httpProtocol = http.baseUrl("http://localhost:8080").header("Content-Type", "application/json")
 
-  val admins = scenario("admins").exec(Search.scenarioFindAll, SearchById.scenarioFindById, Update.scenarioUpdate, Create.scenarioCreate)
-  val users = scenario("users").exec(Search.scenarioFindAll, SearchById.scenarioFindById)
+  // =========================
+  // MIXED CRUD
+  // =========================
 
+  val crud =
+    scenario("Person CRUD")
+
+      .randomSwitch(
+        70.0 -> exec(listPersons),
+        15.0 -> exec(findPerson),
+        10.0 -> exec(updatePerson),
+        5.0 -> exec(createPerson)
+      )
+
+
+  // =========================
+  // LOAD PROFILE
+  // =========================
 
   setUp(
-    admins.inject(
-      rampUsersPerSec(0).to(100).during(5.minutes)
-    ),
-    users.inject(
-      rampUsersPerSec(0).to(100).during(10.minutes)
+    crud.inject(
+
+      // Warm-up
+      constantUsersPerSec(20)
+        .during(2.minutes),
+
+      // 50
+      rampUsersPerSec(20)
+        .to(50)
+        .during(1.minute),
+
+      constantUsersPerSec(50)
+        .during(3.minutes),
+
+      // 100
+      rampUsersPerSec(50)
+        .to(100)
+        .during(1.minute),
+
+      constantUsersPerSec(100)
+        .during(3.minutes),
+
+      // 150
+      rampUsersPerSec(100)
+        .to(150)
+        .during(1.minute),
+
+      constantUsersPerSec(150)
+        .during(3.minutes),
+
+      // 200
+      rampUsersPerSec(150)
+        .to(200)
+        .during(1.minute),
+
+      constantUsersPerSec(200)
+        .during(5.minutes),
+
+      // 300
+      rampUsersPerSec(200)
+        .to(300)
+        .during(1.minute),
+
+      constantUsersPerSec(300)
+        .during(5.minutes),
+
+      // Cool down
+      rampUsersPerSec(300)
+        .to(50)
+        .during(2.minutes),
+
+      constantUsersPerSec(50)
+        .during(3.minutes)
     )
   ).protocols(httpProtocol)
 }

@@ -26,8 +26,8 @@ spec:
               cpu: 250m
               memory: 512Mi
             limits:
-              cpu: 250m
-              memory: 512Mi
+              cpu: 1
+              memory: 718Mi
 
 ---
 
@@ -50,12 +50,12 @@ spec:
         target:
           type: Utilization
           averageUtilization: 70
-    - type: Resource
-      resource:
-        name: memory
-        target:
-          type: Utilization
-          averageUtilization: 70
+#    - type: Resource
+#      resource:
+#        name: memory
+#        target:
+#          type: Utilization
+#          averageUtilization: 70
 
 ---
 
@@ -118,17 +118,22 @@ spec:
       containers:
         - name: postgres
           image: postgres:13
-
           ports:
             - containerPort: 5432
-
           env:
             - name: POSTGRES_PASSWORD
               value: root
             - name: POSTGRES_USER
               value: root
             - name: POSTGRES_DB
-              value: capavailability_db
+              value: cap_db
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+            limits:
+              cpu: "2"
+              memory: 2Gi
 
 ---
 
