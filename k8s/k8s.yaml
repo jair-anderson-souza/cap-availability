@@ -2,25 +2,53 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: cap-api
-
 spec:
   replicas: 2
-
   selector:
     matchLabels:
       app: cap-api
-
   template:
     metadata:
       labels:
         app: cap-api
     spec:
+      initContainers:
+        - name: wait-for-primary
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              echo "Waiting for PostgreSQL primary..."
+
+              until nc -z db-primary 5432; do
+                echo "Primary not ready..."
+                sleep 2
+              done
+
+              echo "PostgreSQL primary is ready."
+
       containers:
         - name: cap-api
           image: cap-api:v1
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
+          env:
+            - name: DB_PRIMARY_HOST
+              value: db-primary
+            - name: DB_PRIMARY_PORT
+              value: "5432"
+            - name: DB_REPLICA_HOST
+              value: db-replica
+            - name: DB_REPLICA_PORT
+              value: "5432"
+            - name: DB_USERNAME
+              value: root
+            - name: DB_PASSWORD
+              value: root
+            - name: DB_NAME
+              value: cap_db
           resources:
             requests:
               cpu: 250m
@@ -35,7 +63,6 @@ apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
   name: cap-api
-
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
@@ -50,12 +77,6 @@ spec:
         target:
           type: Utilization
           averageUtilization: 70
-#    - type: Resource
-#      resource:
-#        name: memory
-#        target:
-#          type: Utilization
-#          averageUtilization: 70
 
 ---
 
@@ -63,70 +84,215 @@ apiVersion: v1
 kind: Service
 metadata:
   name: cap-api
-  labels:
-    name: cap-api
-
 spec:
   type: LoadBalancer
-
   selector:
     app: cap-api
   ports:
     - port: 8080
       targetPort: 8080
 
-#---
+---
 
-#apiVersion: networking.k8s.io/v1
-#kind: Ingress
-#metadata:
-#  name: cap-availability
-#
-#spec:
-#  rules:
-#    - host: cap-availability.local
-#
-#      http:
-#        paths:
-#          - path: /
-#            pathType: Prefix
-#
-#            backend:
-#              service:
-#                name: cap-availability
-#                port:
-#                  number: 8080
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+spec:
+  clusterIP: None
+  selector:
+    app: postgres
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: db-primary
+spec:
+  type: ClusterIP
+  selector:
+    app: postgres
+    statefulset.kubernetes.io/pod-name: db-0
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: db-replica
+spec:
+  type: ClusterIP
+  selector:
+    app: postgres
+    statefulset.kubernetes.io/pod-name: db-1
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: 5432
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: db-primary-init
+data:
+  01-replication.sql: |
+    CREATE ROLE replicator
+      WITH REPLICATION
+      LOGIN
+      PASSWORD 'replicator_password';
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: db-primary-config
+data:
+  02-config.sh: |
+    #!/bin/bash
+    set -e
+    echo "Configuring PostgreSQL replication..."
+    cat >> "${PGDATA}/pg_hba.conf" <<EOF
+    # Kubernetes replication
+    host replication replicator 0.0.0.0/0 scram-sha-256
+    host replication replicator ::0/0 scram-sha-256
+    EOF
+    echo "Replication configuration completed."
 
 ---
 
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
-  name: db
+  name: postgres
 spec:
-  replicas: 1
-
+  serviceName: postgres
+  replicas: 2
   selector:
     matchLabels:
-      app: db
-
+      app: postgres
   template:
     metadata:
       labels:
-        app: db
+        app: postgres
     spec:
+      initContainers:
+        - name: init-replica
+          image: postgres:13
+          command:
+            - bash
+            - -c
+            - |
+              set -e
+              POD_NAME="${HOSTNAME}"
+              echo "Pod: ${POD_NAME}"
+              if [ "${POD_NAME}" = "db-0" ]; then
+                echo "This is the PRIMARY."
+                mkdir -p "${PGDATA}"
+                chmod 700 "${PGDATA}"
+                exit 0
+              fi
+              echo "This is the REPLICA."
+              echo "Waiting for primary..."
+              until pg_isready \
+                -h db-0.postgres \
+                -p 5432 \
+                -U root; do
+                echo "Primary not ready..."
+                sleep 3
+              done
+              echo "Primary is ready."
+              rm -rf "${PGDATA:?}"/*
+              PGPASSWORD=replicator_password \
+              pg_basebackup \
+                -h db-0.postgres \
+                -p 5432 \
+                -U replicator \
+                -D "${PGDATA}" \
+                -Fp \
+                -Xs \
+                -P \
+                -R
+              chmod 700 "${PGDATA}"
+              echo "Replica initialized successfully."
+          env:
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+            - name: PGPASSWORD
+              value: replicator_password
+          volumeMounts:
+            - name: db-storage
+              mountPath: /var/lib/postgresql/data
       containers:
         - name: postgres
           image: postgres:13
           ports:
-            - containerPort: 5432
+            - name: postgres
+              containerPort: 5432
           env:
-            - name: POSTGRES_PASSWORD
-              value: root
             - name: POSTGRES_USER
+              value: root
+            - name: POSTGRES_PASSWORD
               value: root
             - name: POSTGRES_DB
               value: cap_db
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          args:
+            - postgres
+            - -c
+            - wal_level=replica
+            - -c
+            - max_wal_senders=10
+            - -c
+            - max_replication_slots=10
+            - -c
+            - hot_standby=on
+          volumeMounts:
+            - name: db-storage
+              mountPath: /var/lib/postgresql/data
+            - name: primary-init
+              mountPath: /docker-entrypoint-initdb.d/01-replication.sql
+              subPath: 01-replication.sql
+              readOnly: true
+            - name: primary-config
+              mountPath: /docker-entrypoint-initdb.d/02-config.sh
+              subPath: 02-config.sh
+              readOnly: true
+          readinessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - root
+                - -d
+                - cap_db
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 6
+          livenessProbe:
+
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - root
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 6
           resources:
             requests:
               cpu: 500m
@@ -134,18 +300,21 @@ spec:
             limits:
               cpu: "2"
               memory: 2Gi
-
----
-
-apiVersion: v1
-kind: Service
-metadata:
-  name: db
-spec:
-  type: ClusterIP
-  selector:
-    app: db
-
-  ports:
-    - port: 5432
-      targetPort: 5432
+      volumes:
+        - name: primary-init
+          configMap:
+            name: db-primary-init
+            defaultMode: 0644
+        - name: primary-config
+          configMap:
+            name: db-primary-config
+            defaultMode: 0755
+  volumeClaimTemplates:
+    - metadata:
+        name: db-storage
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 10Gi

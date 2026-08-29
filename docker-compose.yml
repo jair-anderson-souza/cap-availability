@@ -1,38 +1,122 @@
 services:
+
   api:
     platform: linux/x86_64
     build: .
     ports:
       - "8080:8080"
-    deploy:
-      resources:
-        limits:
-          cpus: '1.0'
-          memory: '2048MB'
+
+    environment:
+      DB_PRIMARY_HOST: db-primary
+      DB_PRIMARY_PORT: 5432
+      DB_REPLICA_HOST: db-replica
+      DB_REPLICA_PORT: 5432
+      DB_USERNAME: root
+      DB_PASSWORD: root
+      DB_NAME: cap_db
+
     depends_on:
-      db:
+      db-primary:
+        condition: service_healthy
+      db-replica:
         condition: service_healthy
 
-  db:
-    platform: linux/x86_64
-    image: postgres:13
-    hostname: db
-    environment:
-      - POSTGRES_PASSWORD=root
-      - POSTGRES_USER=root
-      - POSTGRES_DB=cap_db
-    ports:
-      - "5432:5432"
-    volumes:
-      - ./src/main/resources:/docker-entrypoint-initdb.d/
-    healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U root -d cap_db" ]
-      interval: 5s
-      timeout: 5s
-      retries: 5
     deploy:
       resources:
         limits:
-          cpus: '1.0'
-          memory: '2024MB'
+          cpus: "1.0"
+          memory: 2048M
 
+
+  # =========================================================
+  # PRIMARY
+  # =========================================================
+
+  db-primary:
+    platform: linux/x86_64
+    image: postgres:13
+
+    hostname: db-primary
+
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: cap_db
+      PGDATA: /var/lib/postgresql/data/pgdata
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - db_primary_data:/var/lib/postgresql/data
+      - ./docker/primary-init.sh:/docker-entrypoint-initdb.d/01-primary-init.sh:ro
+      - ./src/main/resources:/docker-entrypoint-initdb.d/10-schema:ro
+
+    healthcheck:
+      test:
+        [
+            "CMD-SHELL",
+            "pg_isready -U root -d cap_db"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 2024M
+
+
+  # =========================================================
+  # REPLICA
+  # =========================================================
+
+  db-replica:
+    platform: linux/x86_64
+    image: postgres:13
+
+    hostname: db-replica
+
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: cap_db
+      PGDATA: /var/lib/postgresql/data/pgdata
+
+    ports:
+      - "5433:5432"
+
+    volumes:
+      - db_replica_data:/var/lib/postgresql/data
+      - ./docker/replica-init.sh:/docker-entrypoint-initdb.d/replica-init.sh:ro
+
+    depends_on:
+      db-primary:
+        condition: service_healthy
+
+    healthcheck:
+      test:
+        [
+            "CMD-SHELL",
+            "pg_isready -U root -d cap_db"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+    deploy:
+      resources:
+        limits:
+          cpus: "1.0"
+          memory: 2024M
+
+
+volumes:
+
+  db_primary_data:
+
+  db_replica_data:

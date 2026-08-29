@@ -10,6 +10,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
@@ -20,20 +21,24 @@ public class PersonService {
     private PersonRepository personRepository;
 
     @Cacheable(cacheNames = "persons")
+    @Transactional(readOnly = true)
     public List<Person> getAll(Pageable pageable) {
         return this.personRepository.findAll(pageable).getContent();
     }
 
     @Cacheable(cacheNames = "persons", key = "#id")
+    @Transactional(readOnly = true)
     public Person getById(Long id) {
         return this.personRepository.findById(id).orElse(null);
     }
 
     @CachePut(cacheNames = "persons", key = "#person.id")
+    @Transactional
     public Person update(Person person) {
         return this.personRepository.save(person);
     }
 
+    @Transactional
     @CacheEvict(cacheNames = "persons", allEntries = true)
     public Person save(Person person) {
         return this.personRepository.save(person);
