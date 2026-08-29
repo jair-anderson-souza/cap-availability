@@ -33,20 +33,20 @@
 
 # Kubernetes
 #### 1. Build image
-`docker build -t cap-app:v1 .`
+`docker build -t cap-api:v1 .`
 
 #### 2. Create cluster
-`minikube start --profile cap-app`
+`minikube start --profile cap-api`
 
 #### 3.Upload image
-`minikube image load cap-app:v1 --profile cap-app`
+`minikube image load cap-api:v1 --profile cap-api`
 
 ## 4. Set Context
-`kubectl cluster-info --context kind-cap-app`
-kubectl cluster-info --context cap-app
+`kubectl cluster-info --context kind-cap-api`
+kubectl cluster-info --context cap-api
 
 ## 5. Apply
-`kubectl apply -f cap.yaml`
+`kubectl apply -f k8s.yaml`
 
 ## 6. List all pods
 `kubectl get pods`
@@ -73,12 +73,12 @@ kubectl cluster-info --context cap-app
 `kubectl delete pod nginx`
 
 ## 13. List images in control pane
-`docker exec -it cap-app-control-plane crictl images`
+`docker exec -it cap-api-control-plane crictl images`
 
 
 kubectl delete replicaset,service,deployment,pod --all
-minikube addons enable metrics-server --profile cap-app
+minikube addons enable metrics-server --profile cap-api
 http://localhost:8080/person/1
 kubectl exec -it db-59b9bc6688-lpkch -- /bin/bash
 psql -d cap_db
-minikube tunnel --profile cap-app`
+minikube tunnel --profile cap-api`

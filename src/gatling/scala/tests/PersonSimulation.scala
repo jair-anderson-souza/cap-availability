@@ -126,58 +126,57 @@ class PersonSimulation extends Simulation {
 
   setUp(
     crud.inject(
-
-      // Warm-up
-      constantUsersPerSec(20)
-        .during(2.minutes),
+        // Warm-up
+        constantUsersPerSec(10)
+          .during(1.minutes),
 
       // 50
-      rampUsersPerSec(20)
-        .to(50)
-        .during(1.minute),
+      rampUsersPerSec(10)
+        .to(25)
+        .during(30.seconds),
 
-      constantUsersPerSec(50)
-        .during(3.minutes),
+      constantUsersPerSec(25)
+        .during(90.seconds),
 
       // 100
-      rampUsersPerSec(50)
-        .to(100)
-        .during(1.minute),
-
-      constantUsersPerSec(100)
-        .during(3.minutes),
-
-      // 150
-      rampUsersPerSec(100)
-        .to(150)
-        .during(1.minute),
-
-      constantUsersPerSec(150)
-        .during(3.minutes),
-
-      // 200
-      rampUsersPerSec(150)
-        .to(200)
-        .during(1.minute),
-
-      constantUsersPerSec(200)
-        .during(5.minutes),
-
-      // 300
-      rampUsersPerSec(200)
-        .to(300)
-        .during(1.minute),
-
-      constantUsersPerSec(300)
-        .during(5.minutes),
-
-      // Cool down
-      rampUsersPerSec(300)
+      rampUsersPerSec(25)
         .to(50)
-        .during(2.minutes),
+        .during(30.seconds),
 
       constantUsersPerSec(50)
-        .during(3.minutes)
+        .during(90.seconds),
+
+      // 150
+      rampUsersPerSec(50)
+        .to(75)
+        .during(30.seconds),
+
+      constantUsersPerSec(75)
+        .during(90.seconds),
+
+      // 200
+      rampUsersPerSec(75)
+        .to(100)
+        .during(30.seconds),
+
+      constantUsersPerSec(100)
+        .during(150.seconds),
+
+      // 300
+      rampUsersPerSec(100)
+        .to(150)
+        .during(30.seconds),
+
+      constantUsersPerSec(150)
+        .during(150.seconds),
+
+      // Cool down
+      rampUsersPerSec(1500)
+        .to(25)
+        .during(120.seconds),
+
+      constantUsersPerSec(25)
+        .during(90.seconds)
     )
   ).protocols(httpProtocol)
 }

@@ -1,23 +1,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: cap-availability
+  name: cap-api
 
 spec:
   replicas: 2
 
   selector:
     matchLabels:
-      app: cap-availability
+      app: cap-api
 
   template:
     metadata:
       labels:
-        app: cap-availability
+        app: cap-api
     spec:
       containers:
-        - name: cap-availability
-          image: cap-availability-app:v1
+        - name: cap-api
+          image: cap-api:v1
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
@@ -26,7 +26,7 @@ spec:
               cpu: 250m
               memory: 512Mi
             limits:
-              cpu: 1
+              cpu: 1000m
               memory: 718Mi
 
 ---
@@ -34,13 +34,13 @@ spec:
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: cap-availability
+  name: cap-api
 
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: cap-availability
+    name: cap-api
   minReplicas: 2
   maxReplicas: 6
   metrics:
@@ -62,15 +62,15 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: cap-availability
+  name: cap-api
   labels:
-    name: cap-availability
+    name: cap-api
 
 spec:
   type: LoadBalancer
 
   selector:
-    app: cap-availability
+    app: cap-api
   ports:
     - port: 8080
       targetPort: 8080
