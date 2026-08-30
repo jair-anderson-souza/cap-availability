@@ -20,12 +20,12 @@ spec:
             - -c
             - |
               echo "Waiting for PostgreSQL primary..."
-
+              
               until nc -z db-primary 5432; do
                 echo "Primary not ready..."
                 sleep 2
               done
-
+              
               echo "PostgreSQL primary is ready."
 
       containers:
@@ -79,7 +79,6 @@ spec:
           averageUtilization: 70
 
 ---
-
 apiVersion: v1
 kind: Service
 metadata:
@@ -159,16 +158,24 @@ kind: ConfigMap
 metadata:
   name: db-primary-config
 data:
-  02-config.sh: |
+  02-replication.sh: |
     #!/bin/bash
     set -e
-    echo "Configuring PostgreSQL replication..."
-    cat >> "${PGDATA}/pg_hba.conf" <<EOF
-    # Kubernetes replication
-    host replication replicator 0.0.0.0/0 scram-sha-256
-    host replication replicator ::0/0 scram-sha-256
+    
+    echo "Configuring PostgreSQL authentication..."
+    
+    cat >> "${PGDATA}/pg_hba.conf" <<'EOF'
+    
+    # Kubernetes application connections
+    host all all 0.0.0.0/0 md5
+    host all all ::/0 md5
+    
+    # Kubernetes streaming replication
+    host replication replicator 0.0.0.0/0 md5
+    host replication replicator ::/0 md5
     EOF
-    echo "Replication configuration completed."
+    
+    echo "PostgreSQL authentication configured."
 
 ---
 
@@ -179,6 +186,7 @@ metadata:
 spec:
   serviceName: postgres
   replicas: 2
+  podManagementPolicy: OrderedReady
   selector:
     matchLabels:
       app: postgres
@@ -190,31 +198,55 @@ spec:
       initContainers:
         - name: init-replica
           image: postgres:13
+
           command:
             - bash
             - -c
             - |
               set -e
-              POD_NAME="${HOSTNAME}"
-              echo "Pod: ${POD_NAME}"
-              if [ "${POD_NAME}" = "postgres-0" ]; then
-                echo "This is the PRIMARY."
-                mkdir -p "${PGDATA}"
-                chmod 700 "${PGDATA}"
+              
+              echo "Pod: ${HOSTNAME}"
+              
+              # =================================================
+              # PRIMARY
+              # =================================================
+              
+              if [ "${HOSTNAME}" = "postgres-0" ]; then
+                echo "PRIMARY: skipping replica initialization."
                 exit 0
               fi
-              echo "This is the REPLICA."
-              echo "Waiting for primary..."
+              
+              # =================================================
+              # REPLICA
+              # =================================================
+              
+              echo "REPLICA: waiting for primary..."
+              
               until pg_isready \
                 -h postgres-0.postgres \
                 -p 5432 \
-                -U root; do
+                -U root \
+                -d cap_db; do
+              
                 echo "Primary not ready..."
                 sleep 3
+              
               done
+              
               echo "Primary is ready."
-              rm -rf "${PGDATA:?}"/*
-              PGPASSWORD=replicator_password \
+              
+              # Se o diretório já estiver inicializado,
+              # não executa pg_basebackup novamente.
+              
+              if [ -f "${PGDATA}/PG_VERSION" ]; then
+                echo "Replica data directory already initialized."
+                exit 0
+              fi
+              
+              echo "Creating replica with pg_basebackup..."
+              
+              export PGPASSWORD="replicator_password"
+              
               pg_basebackup \
                 -h postgres-0.postgres \
                 -p 5432 \
@@ -224,31 +256,44 @@ spec:
                 -Xs \
                 -P \
                 -R
+              
               chmod 700 "${PGDATA}"
+              
               echo "Replica initialized successfully."
+
           env:
             - name: PGDATA
               value: /var/lib/postgresql/data/pgdata
-            - name: PGPASSWORD
-              value: replicator_password
+
           volumeMounts:
             - name: db-storage
               mountPath: /var/lib/postgresql/data
+
+      # ===================================================
+      # POSTGRESQL CONTAINER
+      # ===================================================
+
       containers:
         - name: postgres
           image: postgres:13
+
           ports:
             - name: postgres
               containerPort: 5432
+
           env:
             - name: POSTGRES_USER
               value: root
+
             - name: POSTGRES_PASSWORD
               value: root
+
             - name: POSTGRES_DB
               value: cap_db
+
             - name: PGDATA
               value: /var/lib/postgresql/data/pgdata
+
           args:
             - postgres
             - -c
@@ -259,17 +304,25 @@ spec:
             - max_replication_slots=10
             - -c
             - hot_standby=on
+
           volumeMounts:
             - name: db-storage
               mountPath: /var/lib/postgresql/data
+
             - name: primary-init
               mountPath: /docker-entrypoint-initdb.d/01-replication.sql
               subPath: 01-replication.sql
               readOnly: true
+
             - name: primary-config
-              mountPath: /docker-entrypoint-initdb.d/02-config.sh
-              subPath: 02-config.sh
+              mountPath: /docker-entrypoint-initdb.d/02-replication.sh
+              subPath: 02-replication.sh
               readOnly: true
+
+          # =================================================
+          # READINESS
+          # =================================================
+
           readinessProbe:
             exec:
               command:
@@ -278,17 +331,24 @@ spec:
                 - root
                 - -d
                 - cap_db
+
             initialDelaySeconds: 10
             periodSeconds: 5
             timeoutSeconds: 3
             failureThreshold: 6
-          livenessProbe:
 
+          # =================================================
+          # LIVENESS
+          # =================================================
+
+          livenessProbe:
             exec:
               command:
                 - pg_isready
                 - -U
                 - root
+                - -d
+                - cap_db
             initialDelaySeconds: 30
             periodSeconds: 10
             timeoutSeconds: 3
