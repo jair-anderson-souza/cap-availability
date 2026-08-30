@@ -139,44 +139,44 @@ class PersonSimulation extends Simulation {
         .during(90.seconds),
 
       // 100
-//      rampUsersPerSec(25)
-//        .to(50)
-//        .during(30.seconds),
+      rampUsersPerSec(25)
+        .to(50)
+        .during(30.seconds),
 //
-//      constantUsersPerSec(50)
-//        .during(90.seconds),
+      constantUsersPerSec(50)
+        .during(90.seconds),
 //
 //      // 150
-//      rampUsersPerSec(50)
-//        .to(75)
-//        .during(30.seconds),
+      rampUsersPerSec(50)
+        .to(75)
+        .during(30.seconds),
 //
-//      constantUsersPerSec(75)
-//        .during(90.seconds),
+      constantUsersPerSec(75)
+        .during(90.seconds),
 //
 //      // 200
-//      rampUsersPerSec(75)
-//        .to(100)
-//        .during(30.seconds),
+      rampUsersPerSec(75)
+        .to(100)
+        .during(30.seconds),
 //
-//      constantUsersPerSec(100)
-//        .during(150.seconds),
+      constantUsersPerSec(100)
+        .during(150.seconds),
 //
 //      // 300
-//      rampUsersPerSec(100)
-//        .to(150)
-//        .during(30.seconds),
+      rampUsersPerSec(100)
+        .to(150)
+        .during(30.seconds),
 //
-//      constantUsersPerSec(150)
-//        .during(150.seconds),
+      constantUsersPerSec(150)
+        .during(150.seconds),
 //
 //      // Cool down
-//      rampUsersPerSec(1500)
-//        .to(25)
-//        .during(120.seconds),
+      rampUsersPerSec(1500)
+        .to(25)
+        .during(120.seconds),
 //
-//      constantUsersPerSec(25)
-//        .during(90.seconds)
+      constantUsersPerSec(25)
+        .during(90.seconds)
     )
   ).protocols(httpProtocol)
 }

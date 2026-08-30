@@ -30,7 +30,7 @@ spec:
 
       containers:
         - name: cap-api
-          image: cap-api:v1
+          image: cap-api:v2
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
@@ -69,7 +69,7 @@ spec:
     kind: Deployment
     name: cap-api
   minReplicas: 2
-  maxReplicas: 6
+  maxReplicas: 2
   metrics:
     - type: Resource
       resource:
