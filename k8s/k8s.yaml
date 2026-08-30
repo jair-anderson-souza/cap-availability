@@ -117,7 +117,7 @@ spec:
   type: ClusterIP
   selector:
     app: postgres
-    statefulset.kubernetes.io/pod-name: db-0
+    statefulset.kubernetes.io/pod-name: postgres-0
   ports:
     - name: postgres
       port: 5432
@@ -133,7 +133,7 @@ spec:
   type: ClusterIP
   selector:
     app: postgres
-    statefulset.kubernetes.io/pod-name: db-1
+    statefulset.kubernetes.io/pod-name: postgres-1
   ports:
     - name: postgres
       port: 5432
@@ -197,7 +197,7 @@ spec:
               set -e
               POD_NAME="${HOSTNAME}"
               echo "Pod: ${POD_NAME}"
-              if [ "${POD_NAME}" = "db-0" ]; then
+              if [ "${POD_NAME}" = "postgres-0" ]; then
                 echo "This is the PRIMARY."
                 mkdir -p "${PGDATA}"
                 chmod 700 "${PGDATA}"
@@ -206,7 +206,7 @@ spec:
               echo "This is the REPLICA."
               echo "Waiting for primary..."
               until pg_isready \
-                -h db-0.postgres \
+                -h postgres-0.postgres \
                 -p 5432 \
                 -U root; do
                 echo "Primary not ready..."
@@ -216,7 +216,7 @@ spec:
               rm -rf "${PGDATA:?}"/*
               PGPASSWORD=replicator_password \
               pg_basebackup \
-                -h db-0.postgres \
+                -h postgres-0.postgres \
                 -p 5432 \
                 -U replicator \
                 -D "${PGDATA}" \

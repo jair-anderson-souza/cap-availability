@@ -1,11 +1,9 @@
 services:
-
   api:
     platform: linux/x86_64
     build: .
     ports:
       - "8080:8080"
-
     environment:
       DB_PRIMARY_HOST: db-primary
       DB_PRIMARY_PORT: 5432
@@ -35,9 +33,7 @@ services:
   db-primary:
     platform: linux/x86_64
     image: postgres:13
-
     hostname: db-primary
-
     environment:
       POSTGRES_USER: root
       POSTGRES_PASSWORD: root
@@ -116,7 +112,5 @@ services:
 
 
 volumes:
-
   db_primary_data:
-
   db_replica_data:
