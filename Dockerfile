@@ -1,4 +1,4 @@
-FROM openjdk:15.0.2-jdk-slim
+FROM eclipse-temurin:17.0.20_8-jre
 
 WORKDIR /app
 

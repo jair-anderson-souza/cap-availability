@@ -1,6 +1,6 @@
 services:
   api:
-    platform: linux/x86_64
+    platform: linux/arm64
     build: .
     ports:
       - "8080:8080"
@@ -31,7 +31,7 @@ services:
   # =========================================================
 
   db-primary:
-    platform: linux/x86_64
+    platform: linux/arm64
     image: postgres:13
     hostname: db-primary
     environment:
@@ -71,7 +71,7 @@ services:
   # =========================================================
 
   db-replica:
-    platform: linux/x86_64
+    platform: linux/arm64
     image: postgres:13
 
     hostname: db-replica

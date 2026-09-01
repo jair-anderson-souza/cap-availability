@@ -30,7 +30,7 @@ spec:
 
       containers:
         - name: cap-api
-          image: cap-api:v2
+          image: cap-api:v1
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080

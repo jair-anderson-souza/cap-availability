@@ -1,13 +1,18 @@
 plugins {
-    id 'org.springframework.boot' version '2.4.5'
-    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+    id 'org.springframework.boot' version '4.1.1'
+    id 'io.spring.dependency-management' version '1.1.7'
     id 'java'
     id "io.gatling.gradle" version "3.6.0"
 }
 
 group = 'io.github.jair.anderson.souza'
 version = '1.0.0'
-sourceCompatibility = '15'
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
 
 repositories {
     mavenCentral()
@@ -20,7 +25,7 @@ dependencies {
     testImplementation('org.junit.jupiter:junit-jupiter-engine:5.6.2')
     compileOnly 'org.projectlombok:lombok'
     implementation 'org.postgresql:postgresql:42.2.19'
-    testCompile group: 'io.gatling.highcharts', name: 'gatling-charts-highcharts', version: '2.3.0'
+    testImplementation group: 'io.gatling.highcharts', name: 'gatling-charts-highcharts', version: '2.3.0'
     implementation 'org.mapstruct:mapstruct:1.4.2.Final'
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.4.2.Final'
     implementation 'org.springframework.boot:spring-boot-starter-cache'
@@ -28,6 +33,10 @@ dependencies {
 
 test {
     useJUnitPlatform()
+}
+
+tasks.named('processGatlingResources') {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
 
 bootJar {
